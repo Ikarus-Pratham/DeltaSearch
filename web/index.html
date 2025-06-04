@@ -44,25 +44,47 @@
                 </div>
                 
                 <!-- Search Options -->
-                <div class="mt-6 p-4 bg-gray-50 rounded-xl">
-                    <h4 class="text-lg font-semibold text-black mb-4 flex items-center">
+                <div class="mt-6 p-6 bg-gray-50 rounded-xl">
+                    <h4 class="text-lg font-semibold text-black mb-6 flex items-center">
                         <i class="fas fa-cog text-primary mr-2"></i>Search Options
                     </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="num-results" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-list-ol text-primary mr-1"></i>Number of Results
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Deep Search Slider -->
+                        <div class="space-y-4">
+                            <label for="deep-search" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-search-plus text-primary mr-1"></i>Deep Search Level
                             </label>
-                            <input 
-                                type="number" 
-                                id="num-results" 
-                                class="form-input w-full px-4 py-3 rounded-lg bg-white" 
-                                placeholder="Enter number of results"
-                                value="10"
-                                min="1"
-                                max="100"
-                            >
+                            <div class="relative">
+                                <input 
+                                    type="range" 
+                                    id="deep-search" 
+                                    class="slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
+                                    min="1" 
+                                    max="10" 
+                                    value="5"
+                                    step="1"
+                                >
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>1</span>
+                                    <span>5</span>
+                                    <span>10</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700">Current Level:</span>
+                                <span id="search-level-display" class="bg-primary text-white px-3 py-1 rounded-full text-sm font-bold">5</span>
+                            </div>
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                                <div class="flex items-start">
+                                    <i class="fas fa-info-circle text-blue-400 mt-0.5 mr-2"></i>
+                                    <p class="text-blue-800 text-xs">
+                                        <strong>Note:</strong> Higher values provide more comprehensive results but take longer to process.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <!-- Save Folder -->
                         <div>
                             <label for="save-folder" class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class="fas fa-folder text-primary mr-1"></i>Save to Folder
@@ -75,7 +97,7 @@
                                     placeholder="Select a folder"
                                     readonly
                                 >
-                                <button id="select-folder-btn" class="bg-primary text-white px-4 py-3 rounded-lg hover:bg-primary-dark transition-colors">
+                                <button id="select-folder-btn" class="bg-primary text-white px-4 py-3 rounded-lg hover:bg-primary-dark transition-colors flex-shrink-0">
                                     <i class="fas fa-folder-open"></i>
                                 </button>
                             </div>
@@ -116,7 +138,7 @@
                 <div class="result-card rounded-2xl shadow-lg p-8">
                     <div class="flex items-center mb-6">
                         <i class="fas fa-info-circle text-primary text-2xl mr-3"></i>
-                        <h2 class="text-2xl font-bold text-black">Product Information</h2>
+                        <h2 class="text-2xl font-bold text-black">Search Information</h2>
                     </div>
                     <div id="product-info" class="text-black">
                         <!-- Product info will be inserted here -->

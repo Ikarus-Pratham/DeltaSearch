@@ -17,7 +17,8 @@ const results = document.getElementById('results');
 const productInfo = document.getElementById('product-info');
 const imageGallery = document.getElementById('image-gallery');
 const imageCount = document.getElementById('image-count');
-const numResults = document.getElementById('num-results');
+const deepSearchSlider = document.getElementById('deep-search');
+const searchLevelDisplay = document.getElementById('search-level-display');
 const saveFolder = document.getElementById('save-folder');
 const selectFolderBtn = document.getElementById('select-folder-btn');
 
@@ -33,6 +34,10 @@ function initializeEventListeners() {
 
     imageUpload.addEventListener('change', handleImageUpload);
 
+    // Deep Search Slider Events
+    deepSearchSlider.addEventListener('input', handleSliderChange);
+    deepSearchSlider.addEventListener('change', handleSliderChange);
+
     // Folder Selection Event
     selectFolderBtn.addEventListener('click', handleFolderSelection);
 
@@ -41,6 +46,20 @@ function initializeEventListeners() {
 
     // Keyboard Events
     document.addEventListener('keydown', handleKeydown);
+
+    // Initialize slider display
+    updateSliderDisplay();
+}
+
+// Slider Event Handlers
+function handleSliderChange(e) {
+    updateSliderDisplay();
+}
+
+function updateSliderDisplay() {
+    const value = deepSearchSlider.value;
+    searchLevelDisplay.textContent = value;
+    deepSearchSlider.setAttribute('data-value', value);
 }
 
 // Upload Zone Event Handlers
@@ -109,12 +128,12 @@ async function handleSearch() {
     }
 
     const file = imageUpload.files[0];
-    const numResultsValue = parseInt(numResults.value);
+    const deepSearchLevel = parseInt(deepSearchSlider.value);
     const saveFolderValue = saveFolder.value.trim();
     
     // Validate inputs
-    if (isNaN(numResultsValue) || numResultsValue < 1 || numResultsValue > 100) {
-        showError('Please enter a valid number of results (1-100).');
+    if (isNaN(deepSearchLevel) || deepSearchLevel < 1 || deepSearchLevel > 10) {
+        showError('Please select a valid deep search level (1-10).');
         return;
     }
     
@@ -122,17 +141,18 @@ async function handleSearch() {
     reader.onload = async (e) => {
         const imageData = e.target.result;
         
-        // Show loading state
+        // Show loading state with dynamic message based on search level
+        updateLoadingMessage(deepSearchLevel);
         loading.classList.remove('hidden');
         results.classList.add('hidden');
         hideError();
 
         try {
-            // Updated function call with num_results and save_folder parameters
+            // Updated function call with deep_search_level parameter
             const result = await eel.reverse_image_search_and_scrape(
                 imageData, 
                 saveFolderValue,
-                numResultsValue
+                deepSearchLevel
             )();
             
             if (result.error) {
@@ -140,7 +160,7 @@ async function handleSearch() {
                 return;
             }
 
-            displayResults(result, numResultsValue);
+            displayResults(result, deepSearchLevel);
         } catch (err) {
             showError('An error occurred: ' + err);
         } finally {
@@ -150,9 +170,32 @@ async function handleSearch() {
     reader.readAsDataURL(file);
 }
 
-function displayResults(result, requestedResults) {
+function updateLoadingMessage(searchLevel) {
+    const loadingElement = loading.querySelector('p:first-of-type');
+    const timeElement = loading.querySelector('p:last-of-type');
+    
+    let message = 'Searching for similar images...';
+    let timeMessage = 'This may take a few moments';
+    
+    if (searchLevel >= 8) {
+        message = 'Performing deep analysis...';
+        timeMessage = 'This will take several minutes due to comprehensive search';
+    } else if (searchLevel >= 6) {
+        message = 'Conducting thorough search...';
+        timeMessage = 'This may take a few minutes for detailed results';
+    } else if (searchLevel >= 4) {
+        message = 'Searching with enhanced precision...';
+        timeMessage = 'This may take a minute or two';
+    }
+    
+    loadingElement.textContent = message;
+    timeElement.textContent = timeMessage;
+}
+
+function displayResults(result, searchLevel) {
     const saveFolderValue = saveFolder.value.trim();
-    // Display product info
+    
+    // Display search information
     productInfo.innerHTML = `
         <div class="space-y-4">
             <div class="flex items-center">
@@ -160,8 +203,8 @@ function displayResults(result, requestedResults) {
                 <span><strong>Search Date:</strong> ${new Date().toLocaleDateString()}</span>
             </div>
             <div class="flex items-center">
-                <i class="fas fa-list-ol text-primary mr-2"></i>
-                <span><strong>Requested Results:</strong> ${requestedResults}</span>
+                <i class="fas fa-search-plus text-primary mr-2"></i>
+                <span><strong>Deep Search Level:</strong> ${searchLevel}/10</span>
             </div>
         </div>
     `;
@@ -177,9 +220,11 @@ function displayResults(result, requestedResults) {
         
         imageContainer.innerHTML = `
             <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                <img src="${imgData}" alt="Product Image ${index + 1}" class="image-box w-full h-70 object-cover" data-index="${index}">
+                <img src="${imgData}" alt="Similar Image ${index + 1}" class="image-box w-full h-70 object-cover" data-index="${index}">
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <i class="text-white text-2xl opacity-0 transition-opacity"></i>
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fas fa-search text-white text-2xl"></i>
+                    </div>
                 </div>
             </div>
         `;
@@ -190,10 +235,41 @@ function displayResults(result, requestedResults) {
     results.classList.remove('hidden');
 }
 
+function getSearchIntensityText(level) {
+    const intensityMap = {
+        1: 'Quick Scan',
+        2: 'Basic Search',
+        3: 'Standard Search',
+        4: 'Enhanced Search',
+        5: 'Detailed Search',
+        6: 'Thorough Analysis',
+        7: 'Comprehensive Search',
+        8: 'Deep Analysis',
+        9: 'Intensive Search',
+        10: 'Maximum Depth'
+    };
+    return intensityMap[level] || 'Standard Search';
+}
+
 // Keyboard Events
 function handleKeydown(e) {
     if (e.key === 'Enter' && !searchBtn.disabled) {
         handleSearch();
+    }
+    
+    // Allow arrow keys to control slider when focused
+    if (document.activeElement === deepSearchSlider) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const newValue = Math.max(1, parseInt(deepSearchSlider.value) - 1);
+            deepSearchSlider.value = newValue;
+            updateSliderDisplay();
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const newValue = Math.min(10, parseInt(deepSearchSlider.value) + 1);
+            deepSearchSlider.value = newValue;
+            updateSliderDisplay();
+        }
     }
 }
 
@@ -236,11 +312,31 @@ function navigateImage(direction) {
 function showError(message) {
     errorMessage.textContent = message;
     error.classList.remove('hidden');
+    // Auto-hide error after 5 seconds
+    setTimeout(() => {
+        hideError();
+    }, 5000);
 }
 
 function hideError() {
     error.classList.add('hidden');
 }
 
+// Advanced slider interaction
+function initializeSliderInteractions() {
+    // Add click-to-set functionality
+    deepSearchSlider.addEventListener('click', (e) => {
+        const rect = deepSearchSlider.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = clickX / rect.width;
+        const newValue = Math.round(percentage * 9) + 1; // 1-10 range
+        deepSearchSlider.value = Math.max(1, Math.min(10, newValue));
+        updateSliderDisplay();
+    });
+}
+
 // Initialize the application
-document.addEventListener('DOMContentLoaded', initializeEventListeners);
+document.addEventListener('DOMContentLoaded', () => {
+    initializeEventListeners();
+    initializeSliderInteractions();
+});
