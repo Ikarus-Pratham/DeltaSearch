@@ -223,7 +223,7 @@ function displayResults(result, searchLevel) {
                 <img src="${imgData}" alt="Similar Image ${index + 1}" class="image-box w-full h-70 object-cover" data-index="${index}">
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                     <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i class="fas fa-search text-white text-2xl"></i>
+                        <i class="text-white text-2xl"></i>
                     </div>
                 </div>
             </div>
