@@ -17,8 +17,9 @@ const results = document.getElementById('results');
 const productInfo = document.getElementById('product-info');
 const imageGallery = document.getElementById('image-gallery');
 const imageCount = document.getElementById('image-count');
-const closeModal = document.getElementById('close-modal');
-const currentImageIndexSpan = document.getElementById('current-image-index');
+const numResults = document.getElementById('num-results');
+const saveFolder = document.getElementById('save-folder');
+const selectFolderBtn = document.getElementById('select-folder-btn');
 
 // Initialize Event Listeners
 function initializeEventListeners() {
@@ -31,6 +32,9 @@ function initializeEventListeners() {
     uploadZone.addEventListener('drop', handleDrop);
 
     imageUpload.addEventListener('change', handleImageUpload);
+
+    // Folder Selection Event
+    selectFolderBtn.addEventListener('click', handleFolderSelection);
 
     // Search Button Event
     searchBtn.addEventListener('click', handleSearch);
@@ -82,6 +86,21 @@ function handleFileSelect(file) {
     reader.readAsDataURL(file);
 }
 
+// Folder Selection Handler
+async function handleFolderSelection() {
+    try {
+        const folderPath = await eel.select_folder()();
+        if (folderPath) {
+            saveFolder.value = folderPath;
+            hideError();
+        } else {
+            showError('No folder selected.');
+        }
+    } catch (err) {
+        showError('Error selecting folder: ' + err);
+    }
+}
+
 // Search Functionality
 async function handleSearch() {
     if (!imageUpload.files[0]) {
@@ -90,6 +109,15 @@ async function handleSearch() {
     }
 
     const file = imageUpload.files[0];
+    const numResultsValue = parseInt(numResults.value);
+    const saveFolderValue = saveFolder.value.trim();
+    
+    // Validate inputs
+    if (isNaN(numResultsValue) || numResultsValue < 1 || numResultsValue > 100) {
+        showError('Please enter a valid number of results (1-100).');
+        return;
+    }
+    
     const reader = new FileReader();
     reader.onload = async (e) => {
         const imageData = e.target.result;
@@ -100,14 +128,20 @@ async function handleSearch() {
         hideError();
 
         try {
-            const result = await eel.reverse_image_search_and_scrape(imageData, 'test')();
+            // Updated function call with num_results and save_folder parameters
+            const result = await eel.reverse_image_search_and_scrape(
+                imageData, 
+                'test', 
+                numResultsValue,
+                saveFolderValue
+            )();
             
             if (result.error) {
                 showError(result.error);
                 return;
             }
 
-            displayResults(result);
+            displayResults(result, numResultsValue);
         } catch (err) {
             showError('An error occurred: ' + err);
         } finally {
@@ -117,7 +151,8 @@ async function handleSearch() {
     reader.readAsDataURL(file);
 }
 
-function displayResults(result) {
+function displayResults(result, requestedResults) {
+    const saveFolderValue = saveFolder.value.trim();
     // Display product info
     productInfo.innerHTML = `
         <div class="space-y-4">
@@ -127,6 +162,14 @@ function displayResults(result) {
                 <i class="fas fa-calendar text-primary mr-2"></i>
                 <span><strong>Search Date:</strong> ${new Date().toLocaleDateString()}</span>
             </div>
+            <div class="flex items-center">
+                <i class="fas fa-list-ol text-primary mr-2"></i>
+                <span><strong>Requested Results:</strong> ${requestedResults}</span>
+            </div>
+            ${saveFolderValue ? `<div class="flex items-center">
+                <i class="fas fa-folder text-primary mr-2"></i>
+                <span><strong>Save Folder:</strong> ${saveFolderValue}</span>
+            </div>` : ''}
         </div>
     `;
 
@@ -148,13 +191,18 @@ function displayResults(result) {
             </div>
         `;
         
-        
         imageGallery.appendChild(imageContainer);
     });
 
     results.classList.remove('hidden');
 }
 
+// Keyboard Events
+function handleKeydown(e) {
+    if (e.key === 'Enter' && !searchBtn.disabled) {
+        handleSearch();
+    }
+}
 
 // Touch Events for Mobile Navigation
 let touchStartX = 0;
@@ -167,6 +215,28 @@ function handleTouchStart(e) {
 function handleTouchEnd(e) {
     touchEndX = e.changedTouches[0].screenX;
     handleSwipe();
+}
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const swipeDistance = touchEndX - touchStartX;
+    
+    if (Math.abs(swipeDistance) > swipeThreshold) {
+        if (swipeDistance > 0) {
+            // Swipe right - previous image
+            navigateImage(-1);
+        } else {
+            // Swipe left - next image
+            navigateImage(1);
+        }
+    }
+}
+
+function navigateImage(direction) {
+    if (uploadedImages.length === 0) return;
+    
+    currentImageIndex = (currentImageIndex + direction + uploadedImages.length) % uploadedImages.length;
+    // Update current image display if needed
 }
 
 // Utility Functions

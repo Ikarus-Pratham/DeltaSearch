@@ -4,24 +4,24 @@
     --primary-red-light: #E55A3D;
 }
 
-.bg-primary { 
-    background-color: var(--primary-red); 
+.bg-primary {
+    background-color: var(--primary-red);
 }
 
-.bg-primary-dark { 
-    background-color: var(--primary-red-dark); 
+.bg-primary-dark {
+    background-color: var(--primary-red-dark);
 }
 
-.bg-primary-light { 
-    background-color: var(--primary-red-light); 
+.bg-primary-light {
+    background-color: var(--primary-red-light);
 }
 
-.text-primary { 
-    color: var(--primary-red); 
+.text-primary {
+    color: var(--primary-red);
 }
 
-.border-primary { 
-    border-color: var(--primary-red); 
+.border-primary {
+    border-color: var(--primary-red);
 }
 
 .upload-zone {
@@ -71,13 +71,13 @@
 }
 
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(20px); 
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -86,7 +86,7 @@
     transition: all 0.3s ease;
 }
 
-.search-btn:hover {
+.search-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, var(--primary-red-dark), var(--primary-red));
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(207, 70, 41, 0.3);
@@ -96,4 +96,19 @@
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(207, 70, 41, 0.1);
+}
+
+.form-input {
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(207, 70, 41, 0.1);
+}
+
+.form-input:hover {
+    border-color: var(--primary-red-light);
 }
