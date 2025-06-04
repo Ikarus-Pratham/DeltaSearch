@@ -17,8 +17,6 @@ const results = document.getElementById('results');
 const productInfo = document.getElementById('product-info');
 const imageGallery = document.getElementById('image-gallery');
 const imageCount = document.getElementById('image-count');
-const fullscreenModal = document.getElementById('fullscreen-modal');
-const fullscreenImage = document.getElementById('fullscreen-image');
 const closeModal = document.getElementById('close-modal');
 const currentImageIndexSpan = document.getElementById('current-image-index');
 
@@ -37,22 +35,8 @@ function initializeEventListeners() {
     // Search Button Event
     searchBtn.addEventListener('click', handleSearch);
 
-    // Modal Events
-    closeModal.addEventListener('click', closeFullscreen);
-    fullscreenModal.addEventListener('click', handleModalClick);
-
     // Keyboard Events
     document.addEventListener('keydown', handleKeydown);
-
-    // Fullscreen Events
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    // Touch Events for Mobile
-    fullscreenModal.addEventListener('touchstart', handleTouchStart);
-    fullscreenModal.addEventListener('touchend', handleTouchEnd);
 }
 
 // Upload Zone Event Handlers
@@ -159,13 +143,11 @@ function displayResults(result) {
             <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
                 <img src="${imgData}" alt="Product Image ${index + 1}" class="image-box w-full h-70 object-cover" data-index="${index}">
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <i class="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    <i class="text-white text-2xl opacity-0 transition-opacity"></i>
                 </div>
             </div>
         `;
         
-        const img = imageContainer.querySelector('img');
-        img.addEventListener('click', () => openFullscreen(index));
         
         imageGallery.appendChild(imageContainer);
     });
@@ -173,69 +155,6 @@ function displayResults(result) {
     results.classList.remove('hidden');
 }
 
-// Fullscreen Functionality
-function openFullscreen(index) {
-    currentImageIndex = index;
-    fullscreenImage.src = uploadedImages[index];
-    currentImageIndexSpan.textContent = `Image ${index + 1} of ${uploadedImages.length}`;
-    fullscreenModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    
-    // Enter browser fullscreen mode
-    if (fullscreenModal.requestFullscreen) {
-        fullscreenModal.requestFullscreen();
-    } else if (fullscreenModal.webkitRequestFullscreen) {
-        fullscreenModal.webkitRequestFullscreen();
-    } else if (fullscreenModal.msRequestFullscreen) {
-        fullscreenModal.msRequestFullscreen();
-    } else if (fullscreenModal.mozRequestFullScreen) {
-        fullscreenModal.mozRequestFullScreen();
-    }
-}
-
-function closeFullscreen() {
-    // Exit browser fullscreen mode
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-    }
-    
-    fullscreenModal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-// Event Handlers
-function handleFullscreenChange() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement && 
-        !document.mozFullScreenElement && !document.msFullscreenElement) {
-        // Exited fullscreen
-        fullscreenModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-}
-
-function handleKeydown(e) {
-    if (!fullscreenModal.classList.contains('hidden')) {
-        if (e.key === 'Escape') {
-            closeFullscreen();
-        } else if (e.key === 'ArrowLeft' && currentImageIndex > 0) {
-            openFullscreen(currentImageIndex - 1);
-        } else if (e.key === 'ArrowRight' && currentImageIndex < uploadedImages.length - 1) {
-            openFullscreen(currentImageIndex + 1);
-        }
-    }
-}
-
-function handleModalClick(e) {
-    if (e.target === fullscreenModal) {
-        closeFullscreen();
-    }
-}
 
 // Touch Events for Mobile Navigation
 let touchStartX = 0;
@@ -248,21 +167,6 @@ function handleTouchStart(e) {
 function handleTouchEnd(e) {
     touchEndX = e.changedTouches[0].screenX;
     handleSwipe();
-}
-
-function handleSwipe() {
-    const swipeThreshold = 50;
-    const diff = touchStartX - touchEndX;
-    
-    if (Math.abs(diff) > swipeThreshold) {
-        if (diff > 0 && currentImageIndex < uploadedImages.length - 1) {
-            // Swipe left - next image
-            openFullscreen(currentImageIndex + 1);
-        } else if (diff < 0 && currentImageIndex > 0) {
-            // Swipe right - previous image
-            openFullscreen(currentImageIndex - 1);
-        }
-    }
 }
 
 // Utility Functions

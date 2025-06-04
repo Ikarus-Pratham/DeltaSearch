@@ -48,10 +48,6 @@
     transition: transform 0.3s ease;
 }
 
-.image-box:hover {
-    transform: scale(1.05);
-}
-
 .modal {
     backdrop-filter: blur(8px);
 }
