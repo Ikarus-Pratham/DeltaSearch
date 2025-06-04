@@ -408,6 +408,7 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
                 if download_image(url, save_path, i):
                     score = SimilarityComparator.compare_images(image_path, save_path)
                     if not score >= 0.85:
+                        print(f"Image {i} is not similar enough, removing: {save_path}")
                         os.remove(save_path)
         
         return list(image_urls)
@@ -486,6 +487,7 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
         file_input.send_keys(os.path.abspath(temp_image_path))
         time.sleep(10)
         
+        # Try Exact matches first
         exact_matches_selectors = [
             "//div[@role='tab'][contains(text(), 'Exact matches')]",
             "//div[contains(text(), 'Exact matches')][@role='tab']",
