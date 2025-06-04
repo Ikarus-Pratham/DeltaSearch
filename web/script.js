@@ -51,6 +51,68 @@ function initializeEventListeners() {
     updateSliderDisplay();
 }
 
+// Function to disable form elements during search
+function disableFormElements() {
+    // Disable upload zone interactions
+    uploadZone.style.pointerEvents = 'none';
+    uploadZone.style.opacity = '0.6';
+    
+    // Disable image upload input
+    imageUpload.disabled = true;
+    
+    // Disable change image button
+    changeImageBtn.disabled = true;
+    changeImageBtn.style.pointerEvents = 'none';
+    changeImageBtn.style.opacity = '0.6';
+    
+    // Disable deep search slider
+    deepSearchSlider.disabled = true;
+    deepSearchSlider.style.pointerEvents = 'none';
+    deepSearchSlider.style.opacity = '0.6';
+    
+    // Disable save folder input and button
+    saveFolder.disabled = true;
+    saveFolder.style.opacity = '0.6';
+    selectFolderBtn.disabled = true;
+    selectFolderBtn.style.pointerEvents = 'none';
+    selectFolderBtn.style.opacity = '0.6';
+    
+    // Disable search button
+    searchBtn.disabled = true;
+    searchBtn.style.cursor = 'not-allowed';
+}
+
+// Function to enable form elements after search
+function enableFormElements() {
+    // Enable upload zone interactions
+    uploadZone.style.pointerEvents = 'auto';
+    uploadZone.style.opacity = '1';
+    
+    // Enable image upload input
+    imageUpload.disabled = false;
+    
+    // Enable change image button
+    changeImageBtn.disabled = false;
+    changeImageBtn.style.pointerEvents = 'auto';
+    changeImageBtn.style.opacity = '1';
+    
+    // Enable deep search slider
+    deepSearchSlider.disabled = false;
+    deepSearchSlider.style.pointerEvents = 'auto';
+    deepSearchSlider.style.opacity = '1';
+    
+    // Enable save folder input and button
+    saveFolder.disabled = false;
+    saveFolder.style.opacity = '1';
+    selectFolderBtn.disabled = false;
+    selectFolderBtn.style.pointerEvents = 'auto';
+    selectFolderBtn.style.opacity = '1';
+    
+    // Enable search button
+    searchBtn.disabled = false;
+    searchBtn.style.cursor = 'pointer';
+}
+
 // Slider Event Handlers
 function handleSliderChange(e) {
     updateSliderDisplay();
@@ -65,7 +127,9 @@ function updateSliderDisplay() {
 // Upload Zone Event Handlers
 function handleDragOver(e) {
     e.preventDefault();
-    uploadZone.classList.add('dragover');
+    if (!uploadZone.style.pointerEvents || uploadZone.style.pointerEvents !== 'none') {
+        uploadZone.classList.add('dragover');
+    }
 }
 
 function handleDragLeave() {
@@ -75,6 +139,12 @@ function handleDragLeave() {
 function handleDrop(e) {
     e.preventDefault();
     uploadZone.classList.remove('dragover');
+    
+    // Check if form is disabled
+    if (uploadZone.style.pointerEvents === 'none') {
+        return;
+    }
+    
     const files = e.dataTransfer.files;
     if (files.length > 0) {
         handleFileSelect(files[0]);
@@ -107,6 +177,11 @@ function handleFileSelect(file) {
 
 // Folder Selection Handler
 async function handleFolderSelection() {
+    // Check if button is disabled
+    if (selectFolderBtn.disabled) {
+        return;
+    }
+    
     try {
         const folderPath = await eel.select_folder()();
         if (folderPath) {
@@ -141,6 +216,9 @@ async function handleSearch() {
     reader.onload = async (e) => {
         const imageData = e.target.result;
         
+        // Disable all form elements
+        disableFormElements();
+        
         // Show loading state with dynamic message based on search level
         updateLoadingMessage(deepSearchLevel);
         loading.classList.remove('hidden');
@@ -164,6 +242,8 @@ async function handleSearch() {
         } catch (err) {
             showError('An error occurred: ' + err);
         } finally {
+            // Re-enable all form elements
+            enableFormElements();
             loading.classList.add('hidden');
         }
     };
@@ -257,8 +337,8 @@ function handleKeydown(e) {
         handleSearch();
     }
     
-    // Allow arrow keys to control slider when focused
-    if (document.activeElement === deepSearchSlider) {
+    // Allow arrow keys to control slider when focused and not disabled
+    if (document.activeElement === deepSearchSlider && !deepSearchSlider.disabled) {
         if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
             e.preventDefault();
             const newValue = Math.max(1, parseInt(deepSearchSlider.value) - 1);
@@ -326,6 +406,11 @@ function hideError() {
 function initializeSliderInteractions() {
     // Add click-to-set functionality
     deepSearchSlider.addEventListener('click', (e) => {
+        // Don't allow interaction if disabled
+        if (deepSearchSlider.disabled) {
+            return;
+        }
+        
         const rect = deepSearchSlider.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const percentage = clickX / rect.width;
