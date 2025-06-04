@@ -428,6 +428,15 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
     
     driver = None
     try:
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder)
+        
+        # clear any existing images in the save folder
+        for file in os.listdir(save_folder):
+            file_path = os.path.join(save_folder, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
         # Save base64 image to temporary file
         image_data = image_data.split(',')[1]  # Remove data:image/jpeg;base64, prefix
         image_bytes = base64.b64decode(image_data)
@@ -551,3 +560,4 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
 # Start Eel
 if __name__ == "__main__":
     eel.start('index.html', size=(800, 600))
+    
