@@ -1,7 +1,103 @@
-/* Custom styles if needed */
-#image-gallery img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+:root {
+    --primary-red: #CF4629;
+    --primary-red-dark: #B73E26;
+    --primary-red-light: #E55A3D;
+}
+
+.bg-primary { 
+    background-color: var(--primary-red); 
+}
+
+.bg-primary-dark { 
+    background-color: var(--primary-red-dark); 
+}
+
+.bg-primary-light { 
+    background-color: var(--primary-red-light); 
+}
+
+.text-primary { 
+    color: var(--primary-red); 
+}
+
+.border-primary { 
+    border-color: var(--primary-red); 
+}
+
+.upload-zone {
+    border: 3px dashed #d1d5db;
+    transition: all 0.3s ease;
+}
+
+.upload-zone:hover {
+    border-color: var(--primary-red);
+    background-color: #fef2f2;
+}
+
+.upload-zone.dragover {
+    border-color: var(--primary-red);
+    background-color: #fef2f2;
+    transform: scale(1.02);
+}
+
+.image-box {
+    width: 280px;
+    height: 280px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.image-box:hover {
+    transform: scale(1.05);
+}
+
+.modal {
+    backdrop-filter: blur(8px);
+}
+
+.loading-spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid var(--primary-red);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.search-btn {
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: linear-gradient(135deg, var(--primary-red-dark), var(--primary-red));
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(207, 70, 41, 0.3);
+}
+
+.result-card {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(207, 70, 41, 0.1);
 }
