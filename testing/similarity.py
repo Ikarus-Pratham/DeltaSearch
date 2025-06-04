@@ -2,7 +2,7 @@ import torch
 import clip
 from PIL import Image
 import cv2
-from typing import Optional, Tuple
+from typing import Optional
 
 class ImageSimilarityComparator:
     """A class to compare two images using edge-based CLIP feature similarity."""
@@ -71,23 +71,3 @@ class ImageSimilarityComparator:
         except Exception as e:
             print(f"Error comparing images: {str(e)}")
             return None
-
-if __name__ == "__main__":
-    try:
-        # Initialize comparator
-        comparator: ImageSimilarityComparator = ImageSimilarityComparator()
-        
-        # Example usage
-        original_image_path: str = "liten.webp"
-        image1_path: str = "test/product_image_1.png"
-        
-        # Compare images
-        similarity_score: Optional[float] = comparator.compare_images(original_image_path, image1_path)
-        print(similarity_score)
-        if similarity_score is not None:
-            print(f"Edge-based similarity score: {similarity_score:.4f}")
-        else:
-            print("Failed to compute similarity score.")
-            
-    except Exception as e:
-        print(f"❌ Failed to execute: {str(e)}")
