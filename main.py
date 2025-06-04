@@ -417,6 +417,22 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
     
     except:
         return []
+    
+@eel.expose
+def select_folder():
+    """Expose folder selection to Eel"""
+    try:
+        from tkinter import Tk
+        from tkinter.filedialog import askdirectory
+        root = Tk()
+        root.withdraw()  # Hide the root window
+        folder_path = askdirectory(title="Select Folder")
+        if folder_path:
+            return folder_path
+        else:
+            return "No folder selected"
+    except Exception as e:
+        return str(e)
 
 @eel.expose
 def reverse_image_search_and_scrape(image_data, save_folder="test", search_results_limit=1):
@@ -431,6 +447,7 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
     
     driver = None
     try:
+        print(save_folder, search_results_limit)
         search_results_limit = 1 if search_results_limit < 1 else search_results_limit
 
         if not os.path.exists(save_folder):

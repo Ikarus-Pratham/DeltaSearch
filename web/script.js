@@ -131,9 +131,8 @@ async function handleSearch() {
             // Updated function call with num_results and save_folder parameters
             const result = await eel.reverse_image_search_and_scrape(
                 imageData, 
-                'test', 
-                numResultsValue,
-                saveFolderValue
+                saveFolderValue,
+                numResultsValue
             )();
             
             if (result.error) {
@@ -156,8 +155,6 @@ function displayResults(result, requestedResults) {
     // Display product info
     productInfo.innerHTML = `
         <div class="space-y-4">
-            <h3 class="text-xl font-semibold text-black">${result.product_title}</h3>
-            ${result.metadata.size ? `<div class="flex items-center"><i class="fas fa-ruler-combined text-primary mr-2"></i><span><strong>Size:</strong> ${result.metadata.size}</span></div>` : ''}
             <div class="flex items-center">
                 <i class="fas fa-calendar text-primary mr-2"></i>
                 <span><strong>Search Date:</strong> ${new Date().toLocaleDateString()}</span>
@@ -166,10 +163,6 @@ function displayResults(result, requestedResults) {
                 <i class="fas fa-list-ol text-primary mr-2"></i>
                 <span><strong>Requested Results:</strong> ${requestedResults}</span>
             </div>
-            ${saveFolderValue ? `<div class="flex items-center">
-                <i class="fas fa-folder text-primary mr-2"></i>
-                <span><strong>Save Folder:</strong> ${saveFolderValue}</span>
-            </div>` : ''}
         </div>
     `;
 
