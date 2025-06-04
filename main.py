@@ -148,7 +148,7 @@ def find_upload_elements(driver):
     
     return None
 
-def extract_exact_matches_results_targeted(driver):
+def extract_exact_matches_results_targeted(driver, search_results_limit):
     """Targeted extraction based on the actual HTML structure"""
     results = []
     
@@ -183,7 +183,9 @@ def extract_exact_matches_results_targeted(driver):
         except:
             return results
     
-    for i, container in enumerate(result_containers[:20]):
+    for i, container in enumerate(result_containers[:search_results_limit]):
+        if i >= search_results_limit:
+            break
         try:
             product_url = "No product link found"
             product_title = "No title found"
@@ -417,7 +419,7 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
         return []
 
 @eel.expose
-def reverse_image_search_and_scrape(image_data, save_folder="test"):
+def reverse_image_search_and_scrape(image_data, save_folder="test", search_results_limit=1):
     """Perform reverse image search and scrape images, adapted for Eel"""
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--no-sandbox")
@@ -429,6 +431,8 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
     
     driver = None
     try:
+        search_results_limit = 1 if search_results_limit < 1 else search_results_limit
+
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
         
@@ -515,7 +519,7 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
             driver.execute_script("arguments[0].click();", exact_matches_tab)
             time.sleep(5)
         
-        results = extract_exact_matches_results_targeted(driver)
+        results = extract_exact_matches_results_targeted(driver, search_results_limit)
         
         valid_results = [r for r in results if r['product_url'] not in 
                         ["No link found", "No product URL found (Google search link)", 
@@ -525,17 +529,19 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
         if not valid_results:
             return {"error": "No valid product URLs found"}
         
-        first_product = valid_results[0]
-        image_urls = scrape_product_images(driver, first_product['product_url'], save_folder, temp_image_path)
-        
-        # Convert saved images to base64 for frontend display
         saved_images = []
-        for img_file in os.listdir(save_folder):
-            if img_file.startswith("product_image_"):
-                img_path = os.path.join(save_folder, img_file)
-                with open(img_path, 'rb') as f:
-                    img_data = base64.b64encode(f.read()).decode('utf-8')
-                    saved_images.append(f"data:image/{img_file.split('.')[-1]};base64,{img_data}")
+        for i in range(len(valid_results)):
+            current_product = valid_results[i]
+            image_urls = scrape_product_images(driver, current_product['product_url'], save_folder, temp_image_path)
+
+            for img_file in os.listdir(save_folder):
+                if img_file.startswith("product_image_"):
+                    img_path = os.path.join(save_folder, img_file)
+                    with open(img_path, 'rb') as f:
+                        img_data = base64.b64encode(f.read()).decode('utf-8')
+                        saved_images.append(f"data:image/{img_file.split('.')[-1]};base64,{img_data}")
+
+        first_product = valid_results[0]
         
         return {
             "product_title": first_product['title'],
@@ -543,7 +549,6 @@ def reverse_image_search_and_scrape(image_data, save_folder="test"):
             "source": first_product['source'],
             "image_urls": image_urls,
             "saved_images": saved_images,
-            "metadata": first_product['metadata']
         }
         
     except Exception as e:
