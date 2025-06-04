@@ -444,10 +444,13 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    chrome_options.add_argument("--headless")  # Run in headless mode for Eel
     
     driver = None
     try:
         search_results_limit = 1 if search_results_limit < 1 else search_results_limit
+        
+        save_folder = f"{save_folder}/Delta_Search_Results"
 
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
