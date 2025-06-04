@@ -410,7 +410,7 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
                 if download_image(url, save_path, i):
                     score = SimilarityComparator.compare_images(image_path, save_path)
                     if not score >= 0.85:
-                        print(f"Image {i} is not similar enough, removing: {save_path}")
+                        # print(f"Image {i} is not similar enough, removing: {save_path}")
                         os.remove(save_path)
         
         return list(image_urls)
@@ -447,7 +447,6 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
     
     driver = None
     try:
-        print(save_folder, search_results_limit)
         search_results_limit = 1 if search_results_limit < 1 else search_results_limit
 
         if not os.path.exists(save_folder):
