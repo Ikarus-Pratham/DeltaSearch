@@ -438,7 +438,10 @@ def select_folder():
         from tkinter.filedialog import askdirectory
         root = Tk()
         root.withdraw()  # Hide the root window
+        root.attributes('-topmost', True)
         folder_path = askdirectory(title="Select Folder")
+        root.attributes('-topmost', False)
+        root.destroy()
         if folder_path:
             return folder_path
         else:
