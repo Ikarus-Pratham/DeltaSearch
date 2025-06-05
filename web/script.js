@@ -1,5 +1,6 @@
 let uploadedImages = [];
 let currentImageIndex = 0;
+let selectedFile = null; // Add global variable to store the selected file
 
 // DOM Elements
 const uploadZone = document.getElementById('upload-zone');
@@ -53,62 +54,40 @@ function initializeEventListeners() {
 
 // Function to disable form elements during search
 function disableFormElements() {
-    // Disable upload zone interactions
     uploadZone.style.pointerEvents = 'none';
     uploadZone.style.opacity = '0.6';
-    
-    // Disable image upload input
     imageUpload.disabled = true;
-    
-    // Disable change image button
     changeImageBtn.disabled = true;
     changeImageBtn.style.pointerEvents = 'none';
     changeImageBtn.style.opacity = '0.6';
-    
-    // Disable deep search slider
     deepSearchSlider.disabled = true;
     deepSearchSlider.style.pointerEvents = 'none';
     deepSearchSlider.style.opacity = '0.6';
-    
-    // Disable save folder input and button
     saveFolder.disabled = true;
     saveFolder.style.opacity = '0.6';
     selectFolderBtn.disabled = true;
     selectFolderBtn.style.pointerEvents = 'none';
     selectFolderBtn.style.opacity = '0.6';
-    
-    // Disable search button
     searchBtn.disabled = true;
     searchBtn.style.cursor = 'not-allowed';
 }
 
 // Function to enable form elements after search
 function enableFormElements() {
-    // Enable upload zone interactions
     uploadZone.style.pointerEvents = 'auto';
     uploadZone.style.opacity = '1';
-    
-    // Enable image upload input
     imageUpload.disabled = false;
-    
-    // Enable change image button
     changeImageBtn.disabled = false;
     changeImageBtn.style.pointerEvents = 'auto';
     changeImageBtn.style.opacity = '1';
-    
-    // Enable deep search slider
     deepSearchSlider.disabled = false;
     deepSearchSlider.style.pointerEvents = 'auto';
     deepSearchSlider.style.opacity = '1';
-    
-    // Enable save folder input and button
     saveFolder.disabled = false;
     saveFolder.style.opacity = '1';
     selectFolderBtn.disabled = false;
     selectFolderBtn.style.pointerEvents = 'auto';
     selectFolderBtn.style.opacity = '1';
-    
-    // Enable search button
     searchBtn.disabled = false;
     searchBtn.style.cursor = 'pointer';
 }
@@ -140,7 +119,6 @@ function handleDrop(e) {
     e.preventDefault();
     uploadZone.classList.remove('dragover');
     
-    // Check if form is disabled
     if (uploadZone.style.pointerEvents === 'none') {
         return;
     }
@@ -158,8 +136,22 @@ function handleImageUpload(e) {
 }
 
 function handleFileSelect(file) {
+    // Store the selected file
+    selectedFile = file;
+
+    // Check file size (20MB = 20 * 1024 * 1024 bytes)
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showError('File size exceeds 20MB limit. Please select a smaller image.');
+        imageUpload.value = ''; // Clear the input
+        selectedFile = null; // Clear the stored file
+        return;
+    }
+
     if (!file.type.startsWith('image/')) {
         showError('Please select a valid image file.');
+        imageUpload.value = '';
+        selectedFile = null; // Clear the stored file
         return;
     }
 
@@ -173,11 +165,15 @@ function handleFileSelect(file) {
         hideError();
     };
     reader.readAsDataURL(file);
+
+    // Update the file input to ensure consistency (optional)
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    imageUpload.files = dataTransfer.files;
 }
 
 // Folder Selection Handler
 async function handleFolderSelection() {
-    // Check if button is disabled
     if (selectFolderBtn.disabled) {
         return;
     }
@@ -197,16 +193,24 @@ async function handleFolderSelection() {
 
 // Search Functionality
 async function handleSearch() {
-    if (!imageUpload.files[0]) {
+    // Check if a file is selected (either from input or stored variable)
+    if (!selectedFile && !imageUpload.files[0]) {
         showError('Please select an image to upload.');
         return;
     }
 
-    const file = imageUpload.files[0];
+    const file = selectedFile || imageUpload.files[0]; // Use stored file or input file
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showError('File size exceeds 20MB limit. Please select a smaller image.');
+        imageUpload.value = '';
+        selectedFile = null;
+        return;
+    }
+
     const deepSearchLevel = parseInt(deepSearchSlider.value);
     const saveFolderValue = saveFolder.value.trim();
     
-    // Validate inputs
     if (isNaN(deepSearchLevel) || deepSearchLevel < 1 || deepSearchLevel > 10) {
         showError('Please select a valid deep search level (1-10).');
         return;
@@ -216,17 +220,14 @@ async function handleSearch() {
     reader.onload = async (e) => {
         const imageData = e.target.result;
         
-        // Disable all form elements
         disableFormElements();
         
-        // Show loading state with dynamic message based on search level
         updateLoadingMessage(deepSearchLevel);
         loading.classList.remove('hidden');
         results.classList.add('hidden');
         hideError();
 
         try {
-            // Updated function call with deep_search_level parameter
             const result = await eel.reverse_image_search_and_scrape(
                 imageData, 
                 saveFolderValue,
@@ -242,7 +243,6 @@ async function handleSearch() {
         } catch (err) {
             showError('An error occurred: ' + err);
         } finally {
-            // Re-enable all form elements
             enableFormElements();
             loading.classList.add('hidden');
         }
@@ -275,7 +275,6 @@ function updateLoadingMessage(searchLevel) {
 function displayResults(result, searchLevel) {
     const saveFolderValue = saveFolder.value.trim();
     
-    // Display search information
     productInfo.innerHTML = `
         <div class="space-y-4">
             <div class="flex items-center">
@@ -289,7 +288,6 @@ function displayResults(result, searchLevel) {
         </div>
     `;
 
-    // Display images
     uploadedImages = result.saved_images;
     imageGallery.innerHTML = '';
     imageCount.textContent = `${uploadedImages.length} images found`;
@@ -337,7 +335,6 @@ function handleKeydown(e) {
         handleSearch();
     }
     
-    // Allow arrow keys to control slider when focused and not disabled
     if (document.activeElement === deepSearchSlider && !deepSearchSlider.disabled) {
         if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
             e.preventDefault();
@@ -372,10 +369,8 @@ function handleSwipe() {
     
     if (Math.abs(swipeDistance) > swipeThreshold) {
         if (swipeDistance > 0) {
-            // Swipe right - previous image
             navigateImage(-1);
         } else {
-            // Swipe left - next image
             navigateImage(1);
         }
     }
@@ -385,14 +380,12 @@ function navigateImage(direction) {
     if (uploadedImages.length === 0) return;
     
     currentImageIndex = (currentImageIndex + direction + uploadedImages.length) % uploadedImages.length;
-    // Update current image display if needed
 }
 
 // Utility Functions
 function showError(message) {
     errorMessage.textContent = message;
     error.classList.remove('hidden');
-    // Auto-hide error after 5 seconds
     setTimeout(() => {
         hideError();
     }, 5000);
@@ -404,9 +397,7 @@ function hideError() {
 
 // Advanced slider interaction
 function initializeSliderInteractions() {
-    // Add click-to-set functionality
     deepSearchSlider.addEventListener('click', (e) => {
-        // Don't allow interaction if disabled
         if (deepSearchSlider.disabled) {
             return;
         }
@@ -414,7 +405,7 @@ function initializeSliderInteractions() {
         const rect = deepSearchSlider.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const percentage = clickX / rect.width;
-        const newValue = Math.round(percentage * 9) + 1; // 1-10 range
+        const newValue = Math.round(percentage * 9) + 1;
         deepSearchSlider.value = Math.max(1, Math.min(10, newValue));
         updateSliderDisplay();
     });
