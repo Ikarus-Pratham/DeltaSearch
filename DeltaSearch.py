@@ -55,8 +55,8 @@ def extract_product_url(href, driver=None):
         final_url = response.url
         if "google.com" not in final_url:
             return final_url
-    except:
-        pass
+    except Exception as e:
+        print(f"extract_product_url: Error following redirect for {href}: {str(e)}")
     
     if "google.com" not in parsed_url.netloc:
         return href
@@ -87,7 +87,8 @@ def find_camera_button(driver):
                 EC.element_to_be_clickable((By.XPATH, selector))
             )
             return element
-        except:
+        except Exception as e:
+            print(f"find_camera_button: Failed with selector {selector}: {str(e)}")
             continue
     
     return None
@@ -121,15 +122,16 @@ def find_upload_elements(driver):
                         break
             if upload_element:
                 break
-        except:
+        except Exception as e:
+            print(f"find_upload_elements: Error with selector {selector}: {str(e)}")
             continue
     
     if upload_element:
         try:
             driver.execute_script("arguments[0].click();", upload_element)
             time.sleep(3)
-        except:
-            pass
+        except Exception as e:
+            print(f"find_upload_elements: Error clicking upload element: {str(e)}")
     
     file_input_selectors = [
         "//input[@type='file']",
@@ -143,7 +145,8 @@ def find_upload_elements(driver):
                 EC.presence_of_element_located((By.XPATH, selector))
             )
             return file_input
-        except:
+        except Exception as e:
+            print(f"find_upload_elements: Error finding file input with selector {selector}: {str(e)}")
             continue
     
     return None
@@ -156,8 +159,8 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.ULSxyf, div.MjjYud"))
         )
-    except:
-        pass
+    except Exception as e:
+        print(f"extract_exact_matches_results_targeted: Error waiting for results container: {str(e)}")
     
     container_selectors = [
         "div.ULSxyf",
@@ -172,15 +175,16 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
             if containers:
                 result_containers = containers
                 break
-        except:
-            pass
+        except Exception as e:
+            print(f"extract_exact_matches_results_targeted: Error with container selector {selector}: {str(e)}")
     
     if not result_containers:
         try:
             all_links = driver.find_elements(By.CSS_SELECTOR, "a.ngTNl.ggLgoc")
             result_containers = [link.find_element(By.XPATH, "./ancestor::div[contains(@class, 'ULSxyf') or contains(@class, 'MjjYud')]") for link in all_links[:10]]
             result_containers = [c for c in result_containers if c]
-        except:
+        except Exception as e:
+            print(f"extract_exact_matches_results_targeted: Error with fallback links: {str(e)}")
             return results
     
     for i, container in enumerate(result_containers[:search_results_limit]):
@@ -195,8 +199,8 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
                 href = link_element.get_attribute("href")
                 if href and not href.startswith(("javascript:", "#", "data:")):
                     product_url = extract_product_url(href, driver)
-            except:
-                pass
+            except Exception as e:
+                print(f"extract_exact_matches_results_targeted: Error extracting link: {str(e)}")
             
             try:
                 title_element = container.find_element(By.CSS_SELECTOR, "div.ZhosBf.T7iOye.MBI8Pd.dctkEf")
@@ -210,10 +214,10 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
                             if text and len(text) > 3:
                                 product_title = text
                                 break
-                        except:
-                            continue
-            except:
-                pass
+                        except Exception as e:
+                            print(f"extract_exact_matches_results_targeted: Error with fallback title selector {fallback_selector}: {str(e)}")
+            except Exception as e:
+                print(f"extract_exact_matches_results_targeted: Error extracting title: {str(e)}")
             
             image_url = "No image found"
             try:
@@ -241,18 +245,18 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
                                 break
                         if image_url != "No image found":
                             break
-                    except:
-                        continue
-            except:
-                pass
+                    except Exception as e:
+                        print(f"extract_exact_matches_results_targeted: Error with image selector {img_selector}: {str(e)}")
+            except Exception as e:
+                print(f"extract_exact_matches_results_targeted: Error extracting image: {str(e)}")
             
             source = "Unknown source"
             if product_url and product_url.startswith("http"):
                 try:
                     parsed = urlparse(product_url)
                     source = parsed.netloc.replace("www.", "")
-                except:
-                    pass
+                except Exception as e:
+                    print(f"extract_exact_matches_results_targeted: Error parsing source: {str(e)}")
             
             metadata = {}
             try:
@@ -260,8 +264,8 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
                 size_text = size_element.text.strip()
                 if size_text and 'x' in size_text:
                     metadata['size'] = size_text
-            except:
-                pass
+            except Exception as e:
+                print(f"extract_exact_matches_results_targeted: Error extracting size metadata: {str(e)}")
             
             try:
                 source_element = container.find_element(By.CSS_SELECTOR, "div.xuPcX.yUTMj.OSrXXb.m46kvb.PCBdKc")
@@ -269,8 +273,8 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
                 if source_name:
                     metadata['source_name'] = source_name
                     source = source_name
-            except:
-                pass
+            except Exception as e:
+                print(f"extract_exact_matches_results_targeted: Error extracting source name: {str(e)}")
             
             if (product_url not in ["No product link found", "No product URL found"] or 
                 product_title not in ["No title found"] or 
@@ -284,8 +288,8 @@ def extract_exact_matches_results_targeted(driver, search_results_limit):
                 }
                 results.append(result)
             
-        except:
-            continue
+        except Exception as e:
+            print(f"extract_exact_matches_results_targeted: Error processing container {i}: {str(e)}")
     
     return results
 
@@ -303,12 +307,15 @@ def download_image(url, save_path, index):
                 f.write(response.content)
             return True
         return False
-    except:
+    except Exception as e:
+        print(f"download_image: Error downloading image {index} from {url}: {str(e)}")
         return False
 
 def scrape_product_images(driver, product_url, save_folder, image_path):
     """Scrape all images from a product page within div.imgTagWrapper"""
     try:
+        import random
+
         SimilarityComparator = ImageSimilarityComparator()
         driver.get(product_url)
         time.sleep(5)
@@ -349,10 +356,10 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
                         try:
                             ActionChains(driver).move_to_element(thumb).perform()
                             time.sleep(0.5)
-                        except:
-                            continue
-                except:
-                    continue
+                        except Exception as e:
+                            print(f"scrape_product_images: Error hovering over thumbnail with selector {selector}: {str(e)}")
+                except Exception as e:
+                    print(f"scrape_product_images: Error finding thumbnails with selector {selector}: {str(e)}")
             
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             img_tags = soup.find_all('img')
@@ -369,8 +376,8 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
                 elif data_src and "http" in data_src and not data_src.startswith("data:"):
                     image_urls.add(data_src)
         
-        except:
-            pass
+        except Exception as e:
+            print(f"scrape_product_images: Error processing thumbnails: {str(e)}")
         
         fallback_selectors = [
             "img[src*='product']",
@@ -397,27 +404,32 @@ def scrape_product_images(driver, product_url, save_folder, image_path):
                         image_urls.add(src)
                     elif data_src and "http" in data_src and not data_src.startswith("data:"):
                         image_urls.add(data_src)
-            except:
-                continue
-        
+            except Exception as e:
+                print(f"scrape_product_images: Error with fallback selector {selector}: {str(e)}")
+
+
         for i, url in enumerate(image_urls, 1):
             flag = True
             file_extension = url.split('.')[-1].split('?')[0]
             if file_extension.lower() not in ['jpg', 'jpeg', 'png', 'webp']:
                 flag = False
             if flag:
-                save_path = os.path.join(save_folder, f"product_image_{i}.{file_extension}")
+                save_path = os.path.join(save_folder, f"product_image_{i}_{random.randint(1, 999999)}.{file_extension}")
                 if download_image(url, save_path, i):
                     score = SimilarityComparator.compare_images(image_path, save_path)
-                    if not score >= 0.85:
-                        # print(f"Image {i} is not similar enough, removing: {save_path}")
+                    if score is None:
+                        print(f"scrape_product_images: Image similarity comparison failed for {save_path}")
+                    elif not score >= 0.85:
                         os.remove(save_path)
+                    else:
+                        pass
         
         return list(image_urls)
     
-    except:
+    except Exception as e:
+        print(f"scrape_product_images: General error scraping {product_url}: {str(e)}")
         return []
-    
+
 @eel.expose
 def select_folder():
     """Expose folder selection to Eel"""
@@ -432,6 +444,7 @@ def select_folder():
         else:
             return "No folder selected"
     except Exception as e:
+        print(f"select_folder: Error selecting folder: {str(e)}")
         return str(e)
 
 @eel.expose
@@ -444,7 +457,7 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    # chrome_options.add_argument("--headless")  # Run in headless mode for Eel
+    chrome_options.add_argument("--headless")  # Uncomment for headless mode
     
     driver = None
     try:
@@ -455,7 +468,7 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
         
-        # clear any existing images in the save folder
+        # Clear any existing images in the save folder
         for file in os.listdir(save_folder):
             file_path = os.path.join(save_folder, file)
             if os.path.isfile(file_path):
@@ -491,10 +504,10 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
                     accept_button.click()
                     time.sleep(2)
                     break
-                except:
-                    continue
-        except:
-            pass
+                except Exception as e:
+                    print(f"reverse_image_search_and_scrape: Error with cookie consent selector {selector}: {str(e)}")
+        except Exception as e:
+            print(f"reverse_image_search_and_scrape: Error handling cookie consent: {str(e)}")
         
         camera_button = find_camera_button(driver)
         if not camera_button:
@@ -531,8 +544,8 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
                             break
                 if exact_matches_tab:
                     break
-            except:
-                continue
+            except Exception as e:
+                print(f"reverse_image_search_and_scrape: Error with exact matches selector {selector}: {str(e)}")
         
         if exact_matches_tab:
             driver.execute_script("arguments[0].click();", exact_matches_tab)
@@ -577,13 +590,13 @@ def reverse_image_search_and_scrape(image_data, save_folder="test", search_resul
         if driver:
             try:
                 driver.quit()
-            except:
-                pass
+            except Exception as e:
+                print(f"reverse_image_search_and_scrape: Error closing driver: {str(e)}")
         # Clean up temporary image
         if os.path.exists(temp_image_path):
             os.remove(temp_image_path)
 
 # Start Eel
 if __name__ == "__main__":
-    eel.start('index.html', size=(800, 600))
-    
+    print("Starting Eel web server on port 3904")
+    eel.start('index.html', size=(800, 600), port=3904)
